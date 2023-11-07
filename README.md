@@ -18,9 +18,37 @@ It also allows you to export data with geolocation in GeoJSON and Shapefile vect
 - Excel report creation with various fields extracted from metadata
 - Exporting data with geolocation to GeoJSON and Shapefile
 - Tracking already processed files to avoid duplicates 
-## Spiegazione del codice 
- 
-### Import librerie 
+- 
+## Explanation of the code
+Here is a step-by-step explanation of what this Python code does:
+
+1. Imports various necessary modules and libraries such as os, openpyxl, tkinter, etc.
+
+2. Defines some utility functions such as show_error_in_listbox() and show_in_listbox() to show messages in the interface listbox.
+
+3. load_processed_files() and save_processed_files() load and save the list of files already processed into a JSON file.
+
+4. create_widgets() creates the GUI elements such as the directory tree (tree), the label for images, etc.
+
+5. on_item_double_click() opens the selected image in the tree in a new window for enlarged preview.
+
+6. populate_tree() recursively populates the directory tree.
+
+7. get_exif_data() extracts EXIF metadata from an image.
+
+8. get_coordinates() converts GPS coordinates from EXIF format to decimals.
+
+9. degrees_to_direction() converts degrees to cardinal directions (N, S, E, W).
+
+10. process_images() is the main function that recursively processes all images in a folder. It extracts EXIF data, saves previews, populates the output Excel sheet.
+
+11. other functions to save Excel files, GeoJSON, Shapefile, etc.
+
+12. main() creates tkinter interface, menus, progress bar, and starts processing by calling process_images().
+
+In summary, it is a GUI program to extract EXIF metadata and geolocation from JPEG images and save them to an Excel report. It also allows export to GeoJSON and Shapefile.
+
+### Importing libraries
  
 Initially, the Python modules and libraries needed for the various program features are imported:
  

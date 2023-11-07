@@ -505,10 +505,10 @@ def process_images(
                                 )
                                 # # Verifica che data_to_append non sia una tupla singola
                                 if (
-                                    isinstance(data_to_append, tuple)
-                                    and len(data_to_append) == 1
+                                    isinstance(ws, tuple)
+                                    and len(ws) == 1
                                 ):
-                                    data_to_append = list(data_to_append[0])
+                                    data_to_append = list(ws[0])
                                 #
                                 ws.append(data_to_append)
                                 # Debugging: Verify that the file exists and is accessible

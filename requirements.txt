@@ -1,6 +1,5 @@
 openpyxl
-tkinter
-Pillow
+pillow
 piexif
 pathlib2
 tkinterdnd2

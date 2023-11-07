@@ -1,82 +1,81 @@
-# Documentazione 
+# Documentation
  
-## Scopo 
+## Purpose
  
-Questo programma ha lo scopo di estrarre i metadati e i dati EXIF da immagini JPEG in una cartella, salvare anteprime delle immagini, e creare un report Excel con varie informazioni estratte come posizione GPS, data/ora, orientamento, cartella, ecc.  
+This program aims to extract metadata and EXIF data from JPEG images in a folder, save image previews, and create an Excel report with various extracted information such as GPS location, date/time, orientation, folder, etc.
  
-Inoltre permette di esportare i dati con geolocalizzazione in formato vettoriale GeoJSON e Shapefile. 
+It also allows you to export data with geolocation in GeoJSON and Shapefile vector format.
  
-## Funzionalità principali 
+## Main features
  
-- Interfaccia grafica Tkinter per selezionare cartelle e file e visualizzare lo stato 
-- Elaborazione ricorsiva di tutte le immagini JPEG in una cartella 
-- Lettura metadati EXIF con la libreria piexif 
-- Estrazione coordinate GPS e conversione in decimali  
-- Salvataggio anteprima ridimensionata delle immagini 
-- Creazione report Excel con vari campi estratti dai metadati 
-- Esportazione dati con geolocalizzazione in GeoJSON e Shapefile 
-- Tracciamento file già processati per evitare duplicati 
- 
+- Tkinter graphical interface for selecting folders and files and viewing status
+- Recursive processing of all JPEG images in a folder
+- Reading EXIF metadata with the piexif library
+- GPS coordinate extraction and conversion to decimals
+- Saving resized preview of images
+- Excel report creation with various fields extracted from metadata
+- Exporting data with geolocation to GeoJSON and Shapefile
+- Tracking already processed files to avoid duplicates 
 ## Spiegazione del codice 
  
 ### Import librerie 
  
-Inizialmente vengono importati i moduli e le librerie Python necessarie per le diverse funzionalità del programma: 
+Initially, the Python modules and libraries needed for the various program features are imported:
  
-- os, openpyxl - per gestione file e creazione Excel 
-- tkinter, ttk - per interfaccia grafica  
-- piexif - per estrarre metadati EXIF 
-- PIL, ImageTk - per manipolazione immagini   
-- geopandas, shapely - per creazione GeoJSON e Shapefile 
-- altri moduli di utilità come time, json, ecc. 
+- os, openpyxl - for file management and Excel creation
+- tkinter, ttk - for graphical interface
+- piexif - for extracting EXIF metadata
+- PIL, ImageTk - for image manipulation
+- geopandas, shapely - for GeoJSON and Shapefile creation
+- other utility modules such as time, json, etc.
  
-### Funzioni di utilità 
+### Utility functions
  
-Sono definite alcune funzioni di utilità generiche: 
+Some generic utility functions are defined:
  
--  show_error_in_listbox  e  show_in_listbox : per mostrare messaggi di errore e log nella listbox dell'interfaccia 
--  load_processed_files  e  save_processed_files : caricano e salvano la lista dei file già processati in formato JSON per evitare duplicati 
+- show_error_in_listbox and show_in_listbox : to show error and log messages in the interface listbox
+- load_processed_files and save_processed_files : load and save the list of already processed files in JSON format to avoid duplicates
  
-### Interfaccia grafica 
+### Graphical interface
  
-La funzione  create_widgets  crea gli elementi base dell'interfaccia Tkinter: 
+The create_widgets function creates the basic elements of the Tkinter interface:
  
--  tree : Treeview per mostrare la struttura delle directory 
--  image_label : Label per mostrare l'anteprima delle immagini 
--  listbox : Listbox per log e messaggi di errore 
+- tree : Treeview to show the directory structure
+- image_label : Label to show preview of images
+- listbox : Listbox for logs and error messages
  
-Vengono anche definite le funzioni  on_item_double_click  per aprire l'anteprima ingrandita al doppio click su un'immagine, e  populate_tree  per popolare ricorsivamente la struttura ad albero delle directory. 
+Also defined are the functions on_item_double_click to open the enlarged preview when an image is double-clicked, and populate_tree to recursively populate the directory tree structure.
  
-La funzione  main  crea la finestra principale, i menu, la barra di progressione e gli altri elementi dell'interfaccia. 
+The main function creates the main window, menus, progress bar, and other interface elements.
  
-### Elaborazione immagini 
+### Image processing
  
-Il cuore del programma è la funzione  process_images  che viene chiamata dal pulsante "Start" e processa ricorsivamente tutte le immagini JPEG in una cartella. 
+The heart of the program is the process_images function, which is called by the "Start" button and recursively processes all JPEG images in a folder.
  
-Per ogni immagine vengono svolte le seguenti operazioni: 
+The following operations are performed for each image:
  
-- Lettura metadati EXIF con get_exif_data  
-- Estrazione coordinate GPS con  get_coordinates  
-- Conversione orientamento fotocamera in direzione cardinale con  degrees_to_direction  
-- Salvataggio anteprima ridimensionata dell'immagine  
-- Scrittura di una riga nel foglio Excel con vari campi estratti dai metadati 
-- Esportazione dati con geolocalizzazione in GeoJSON e Shapefile 
-- Tracciamento file processati per evitare duplicati 
+- Reading EXIF metadata with get_exif_data
+- Extracting GPS coordinates with get_coordinates
+- Converting camera orientation to cardinal direction with degrees_to_direction
+- Saving resized preview of the image
+- Writing a row to Excel sheet with various fields extracted from metadata
+- Exporting data with geolocation to GeoJSON and Shapefile
+- Tracking processed files to avoid duplicates
  
-Vengono gestiti opportunamente errori e condizioni eccezionali. 
+Errors and exceptional conditions are handled appropriately.
  
-La funzione aggiorna anche la barra di progressione e le label con il tempo stimato e file rimanenti. 
+The function also updates the progress bar and labels with estimated time and remaining files.
  
-### Esportazione dati 
+### Data export.
  
-I dati con geolocalizzazione vengono esportati in GeoJSON e Shapefile tramite le funzioni  save_geojson  e  save_shapefile . 
+Data with geolocation are exported to GeoJSON and Shapefile using the save_geojson and save_shapefile functions .
  
-Viene creato un GeoDataFrame con la libreria Geopandas e salvato nei formati vettoriali richiesti. 
+A GeoDataFrame is created with the Geopandas library and saved in the required vector formats.
  
-### Conclusioni 
+### Conclusions.
  
-Il programma fornisce un flusso completo per estrarre metadati e geolocalizzazione da immagini JPEG e generare un report con questi dati in Excel. L'interfaccia Tkinter permette un utilizzo interattivo e visualizzazione dello stato di avanzamento. 
+The program provides a complete flow to extract metadata and geolocation from JPEG images and generate a report with this data in Excel. The Tkinter interface allows interactive use and visualization of progress.
  
-La documentazione del codice spiega in dettaglio il funzionamento e la struttura modulare con chiara separazione di responsabilità. Sono stati applicati buoni principi di programmazione come gestione errori, evitare duplicazione di codice, commenti, ecc. 
+The code documentation explains in detail the operation and modular structure with clear separation of responsibilities. Good programming principles such as error handling, avoidance of code duplication, comments, etc. have been applied.
  
-Il programma può essere esteso aggiungendo nuove funzionalità di elaborazione delle immagini o esportazione dati. La struttura ad oggetti e modulare facilita il mantenimento e l'evoluzione nel tempo.
+The program can be extended by adding new features of image processing or data export. The object-oriented and modular structure facilitates maintenance and evolution over time.

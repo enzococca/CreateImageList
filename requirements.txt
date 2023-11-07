@@ -1,0 +1,9 @@
+openpyxl
+pillow
+piexif
+pathlib2
+tkinterdnd2
+geopandas
+shapely
+folium
+imgkit

@@ -993,14 +993,16 @@ def main():
         "<<Drop>>", lambda event: drop(event, tree, root)
     )  # Remove root2 from the lambda function
     # Preliminare definizione della Treeview senza yscrollcommand
-    tree = ttk.Treeview(root, columns=("fullpath", "type"), displaycolumns="")
+    tree_frame = ttk.Frame(root)  # Create a frame to hold the progress bar and label
+    tree_frame.grid(row=1, column=0, sticky="nsew")
+    tree = ttk.Treeview(tree_frame, columns=("fullpath", "type"), displaycolumns="")
 
     # Definizione della scrollbar verticale
-    vsb = ttk.Scrollbar(root, orient="vertical", command=tree.yview)
+    vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
 
     # Aggiornamento della Treeview per utilizzare la scrollbar
     tree.configure(yscrollcommand=vsb.set)
-    hsb = ttk.Scrollbar(orient="horizontal")
+    hsb = ttk.Scrollbar(tree_frame, orient="horizontal")
 
     # tree = ttk.Treeview(columns=("fullpath", "type"), displaycolumns="")
 
@@ -1019,13 +1021,16 @@ def main():
     tree.heading("#0", text="Directory Structure", anchor="w")
     # Configurazione della Treeview per utilizzare la scrollbar
 
-    tree.grid(column=0, row=1, sticky="nsew", padx=10, pady=10)
-    vsb.grid(column=1, row=1, sticky="ns", pady=10)
+    tree.grid(column=0, row=1, sticky="nsew")
+    vsb.grid(column=1, row=1, sticky="ns")
     hsb.grid(column=0, row=2, sticky="ew", padx=10)
     # hsb.grid(column=0, row=2, sticky="ew")
 
     root.grid_columnconfigure(0, weight=1)
     root.grid_rowconfigure(1, weight=1)  # Change this to 1
+    tree_frame.grid_rowconfigure(1, weight=1)
+    tree_frame.grid_columnconfigure(0, weight=1)
+
     root.title("Image Processor")
 
     menubar = tk.Menu(root)
@@ -1071,7 +1076,7 @@ def main():
     progress_var = tk.DoubleVar()
 
     progress_frame = tk.Frame(root)  # Create a frame to hold the progress bar and label
-    progress_frame.grid(row=3, column=0, sticky="ew")
+    progress_frame.grid(row=4, column=0, sticky="ew")
 
     progress_bar = ttk.Progressbar(progress_frame, length=600, variable=progress_var)
     progress_bar.pack(fill="x")
@@ -1092,18 +1097,18 @@ def main():
         ),
     )  # Create a label to show the progress percentage
 
-    start_button.grid(row=2, column=0, sticky="ew")
+    start_button.grid(row=3, column=0, sticky="ew")
     time_label = tk.Label(root)  # Create a label to show the estimated time remaining
-    time_label.grid(row=3, column=0, sticky="w")
+    time_label.grid(row=5, column=0, sticky="w")
     file_count_label = tk.Label(root)  # Create a label to show the file count
-    file_count_label.grid(row=5, column=0, sticky="w")
+    file_count_label.grid(row=6, column=0, sticky="w")
 
     # Add button for adding subdirectories
 
     add_button = tk.Button(
         root, text="Add subdirectory", command=lambda: add_subdirectories(tree)
     )
-    add_button.grid(row=5, column=0, sticky="n")
+    add_button.grid(row=7, column=0, sticky="n")
 
     root.grid_rowconfigure(1, weight=1)
     root.grid_columnconfigure(0, weight=1)

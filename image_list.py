@@ -203,11 +203,11 @@ def show_image_preview(root, tree, listbox):
     try:
         global original_image  # ora è una variabile globale
         selected_items = tree.selection()
-        print(f"Selected items: {selected_items}")  # Debugging
+        #print(f"Selected items: {selected_items}")  # Debugging
         if selected_items:
             selected_item_id = selected_items[0]
             file_path = tree.set(selected_item_id, "fullpath")
-            print(f"File path: {file_path}")  # Debugging
+            #print(f"File path: {file_path}")  # Debugging
             _, ext = os.path.splitext(file_path)
 
             if ext.lower() in [
@@ -229,7 +229,7 @@ def show_image_preview(root, tree, listbox):
                 canvas.bind("<Motion>", show_magnifier)
                 canvas.bind("<Leave>", hide_magnifier)
 
-                print("Image should be displayed now.")  # Debugging
+                #print("Image should be displayed now.")  # Debugging
 
     except UnidentifiedImageError:
         print("Invalid image format.")  # Debugging
@@ -327,7 +327,7 @@ def process_images(
     image_data_list = []
     # Set to keep track of processed files
     duplicate_files_count = 0  # Counter for duplicate files
-    print("il file excel è:" f"{ output_file}")
+    #print("il file excel è:" f"{ output_file}")
     if output_file is None:
         output_file = tempfile.mktemp(suffix=".xlsx")
     # If the Excel file already exists, read it and add the names of the images to the set
@@ -391,9 +391,6 @@ def process_images(
                     unique_file_identifier
                 )  # Add the unique identifier to the set
 
-                # After processing a file, write the processed files set to a file
-                # with open('processed_files.json', 'w') as f:
-                # json.dump(list(processed_files_set), f)
 
                 try:
                     folder_path = Path(full_path).parent
@@ -478,19 +475,8 @@ def process_images(
                                     "Folder": folder_name,
                                 }
                             )
-                            if "DateTime" in exif_data["Exif"]:
-                                print("DateTime:", exif_data["Exif"]["DateTime"])
-                            else:
-                                print(
-                                    # "DateTime not found in EXIF data.",
-                                    exif_data["Exif"],
-                                )
 
                             try:
-                                # Debug: stampa i dati che stiamo per aggiungere
-                                print(
-                                    f"Adding row :{row.index}, {filename}, {latitude}, {longitude}, {datetime_}, {compass_direction_str}, {img_direction}, {folder_name}"
-                                )
 
                                 ws.append(
                                     [
@@ -984,6 +970,58 @@ def update_tree(tree, parent_item):
     expand_nodes(tree, parent_item, expanded_nodes)
 
 
+# def go_up(tree, levels=1):
+#     cur_item = tree.focus()
+#
+#     # Verifica se un elemento è selezionato
+#     if not cur_item:
+#         print("Nessun elemento selezionato.")
+#         return  # Early exit se non c'è una selezione
+#     else:
+#         print(cur_item)
+#     # Prende il percorso corrente e verifica se è valido
+#     cur_path = Path(tree.item(cur_item)['values'][0])
+#     if not cur_path.exists() or not cur_path.is_dir():
+#         print("Il percorso selezionato non è valido o non è una directory.")
+#         return  # Early exit se il percorso non è valido o non è una directory
+#
+#     # Salire di 'levels' nella gerarchia delle cartelle
+#     for _ in range(levels):
+#         # Se il percorso è già la radice, non salire oltre
+#         if cur_path.parent == cur_path:
+#             print("Raggiunta la radice del file system, non è possibile salire ulteriormente.")
+#             break
+#         cur_path = cur_path.parent
+#         print(cur_path)
+#
+#     # Cancella l'albero e popola con il nuovo percorso
+#     tree.delete(*tree.get_children())
+#     populate_tree(tree, cur_path.parent)  # Usare "" per l'elemento radice se appropriato
+#     update_tree(tree, cur_path.parent)  # Usare "" per l'elemento radice se appropriato
+
+def go_up(tree, levels=1):
+    cur_item = tree.focus()
+    if cur_item:
+        # Ottenere il percorso completo dell'elemento corrente
+        cur_path = Path(tree.set(cur_item, "fullpath"))
+        # Salire di 'levels' livelli
+        for _ in range(levels):
+            cur_path = cur_path.parent  # Il percorso della directory superiore
+        # Verifica che non siamo già alla radice del file system
+        if cur_path != cur_path.anchor:
+            # Aggiornare 'fullpath' per la radice dell'albero o per l'elemento corrente
+            tree.set(cur_item, "fullpath", str(cur_path))
+            # Aggiornare il nome visualizzato con il nuovo nome della directory
+            tree.item(cur_item, text=cur_path)
+            print(cur_path)  # Stampa il nuovo percorso per debug
+
+            # Reinizializza l'albero con il nuovo percorso
+            update_tree(tree, cur_item)
+        else:
+            print("Already at the root of the file system.")
+
+
+
 def main():
     global input_dir, output_file, start_button, listbox  # Declare input_dir, output_file, and start_button as global variables
 
@@ -1003,7 +1041,12 @@ def main():
     # Aggiornamento della Treeview per utilizzare la scrollbar
     tree.configure(yscrollcommand=vsb.set)
     hsb = ttk.Scrollbar(tree_frame, orient="horizontal")
+    # Bind the function to a button
+    up_button = tk.Button(tree_frame, text="Up", command=lambda: go_up(tree))
+    up_button.grid(row=2, column=0, sticky="ew")
 
+    # Or bind the function to a key event
+    root.bind('<BackSpace>', lambda event: go_up(tree))
     # tree = ttk.Treeview(columns=("fullpath", "type"), displaycolumns="")
 
     create_widgets(root)
@@ -1099,9 +1142,9 @@ def main():
 
     start_button.grid(row=3, column=0, sticky="ew")
     time_label = tk.Label(root)  # Create a label to show the estimated time remaining
-    time_label.grid(row=5, column=0, sticky="w")
+    time_label.grid(row=3, column=0, sticky="w")
     file_count_label = tk.Label(root)  # Create a label to show the file count
-    file_count_label.grid(row=6, column=0, sticky="w")
+    file_count_label.grid(row=4, column=0, sticky="w")
 
     # Add button for adding subdirectories
 

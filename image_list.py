@@ -8,7 +8,7 @@ from tkinter import ttk, messagebox
 from tkinter import filedialog, simpledialog
 import time
 import tkinter.messagebox
-from PIL import Image, ImageTk, ImageOps, UnidentifiedImageError
+from PIL import Image, ImageDraw, ImageTk, ImageOps, UnidentifiedImageError
 import piexif
 from pathlib2 import Path
 import shutil
@@ -169,27 +169,68 @@ def on_item_double_click(tree, event):
 # Inizializzazione
 magnifier_window = None
 original_image = None  # Sarà impostato nel metodo show_image_preview
-
+global canvas
 
 def show_magnifier(event):
-    global magnifier_window, magnifier_label, original_image
+    global magnifier_window, magnifier_label, original_image, canvas
 
-    if original_image:  # Verifica se original_image è stato impostato
-        x, y = event.x, event.y
-        cropped_image = original_image.crop((x - 25, y - 25, x + 25, y + 25))
-        cropped_image = cropped_image.resize((300, 300), Image.LANCZOS)
-        tk_cropped_image = ImageTk.PhotoImage(cropped_image)
+    if original_image and canvas:  # Check if original_image and canvas have been set
+        scale_x = original_image.width / canvas.winfo_width()
+        scale_y = original_image.height / canvas.winfo_height()
 
+        x = int(event.x * scale_x)
+        y = int(event.y * scale_y)
+
+        crop_size = 500
+        magnifier_size = (200, 200)  # Size of the magnifier window
+
+        # Calculate the crop box coordinates, ensuring we don't go outside the image bounds
+        left = max(0, x - crop_size)
+        top = max(0, y - crop_size)
+        right = min(original_image.width, x + crop_size)
+        bottom = min(original_image.height, y + crop_size)
+        # Create an RGBA image for the mask with a fully transparent background
+        mask = Image.new('L', magnifier_size, 175)  # Start with a fully transparent mask
+        mask_draw = ImageDraw.Draw(mask)
+        # Draw a filled circle on the mask with full opacity (255)
+        mask_draw.ellipse((0, 0) + magnifier_size, fill=255)
+
+        # Crop the image and resize it to the magnifier size
+        cropped_image = original_image.crop((left, top, right, bottom))
+        cropped_image = cropped_image.resize(magnifier_size, Image.LANCZOS)
+
+        # Create a new image with an alpha channel and paste the cropped image using the mask
+        final_image = Image.new("RGBA", magnifier_size)
+        final_image.paste(cropped_image, (0, 0), mask)
+
+        # Draw a small red cross in the middle of the circular magnifier
+        draw = ImageDraw.Draw(final_image)
+        center_x, center_y = magnifier_size[0] // 2, magnifier_size[1] // 2
+        cross_length = 10  # Length of the cross arms
+        # Vertical line
+        draw.line((center_x, center_y - cross_length, center_x, center_y + cross_length), fill="red", width=2)
+        # Horizontal line
+        draw.line((center_x - cross_length, center_y, center_x + cross_length, center_y), fill="red", width=2)
+
+        tk_cropped_image = ImageTk.PhotoImage(final_image)
+
+        # Update or create the magnifier window and label
         if magnifier_window:
             magnifier_label.config(image=tk_cropped_image)
             magnifier_label.image = tk_cropped_image
-            magnifier_window.geometry(f"+{event.x_root+10}+{event.y_root+10}")
+            # Update the position of the magnifier window to follow the cursor
+            magnifier_window.geometry(f"+{event.x_root - magnifier_size[0] // 2}+{event.y_root - magnifier_size[1] // 2}")
         else:
             magnifier_window = tk.Toplevel()
-            magnifier_label = tk.Label(magnifier_window, image=tk_cropped_image)
+            magnifier_window.overrideredirect(True)  # Remove window decorations
+            magnifier_window.attributes('-topmost', True)  # Keep the window above others
+            magnifier_label = tk.Label(magnifier_window, image=tk_cropped_image, bd=0)
             magnifier_label.image = tk_cropped_image
             magnifier_label.pack()
-            magnifier_window.geometry(f"+{event.x_root+10}+{event.y_root+10}")
+            magnifier_window.geometry(f"+{event.x_root - magnifier_size[0] // 2}+{event.y_root - magnifier_size[1] // 2}")
+
+
+
 
 
 def hide_magnifier(event):
@@ -199,43 +240,73 @@ def hide_magnifier(event):
         magnifier_window = None
 
 
+# def show_image_preview(root, tree, listbox):
+#     try:
+#         global original_image  # ora è una variabile globale
+#         selected_items = tree.selection()
+#         #print(f"Selected items: {selected_items}")  # Debugging
+#         if selected_items:
+#             selected_item_id = selected_items[0]
+#             file_path = tree.set(selected_item_id, "fullpath")
+#             #print(f"File path: {file_path}")  # Debugging
+#             _, ext = os.path.splitext(file_path)
+#
+#             if ext.lower() in [
+#                 ".jpeg",
+#                 ".jpg",
+#                 ".png",
+#             ]:  # Aggiunto ".png" come formato accettabile
+#                 original_image = Image.open(file_path)  # Qui impostiamo original_image
+#                 original_image = original_image.resize((200, 200), Image.LANCZOS)
+#                 photo_image = ImageTk.PhotoImage(original_image)
+#                 image_label.config(image=photo_image)
+#                 image_label.photo_image = photo_image
+#                 # Creazione del canvas
+#                 canvas = tk.Canvas(root, width=200, height=200)
+#                 canvas.grid(row=1, column=1)  # posiziona il canvas dove preferisci
+#                 canvas.create_image(0, 0, anchor=tk.NW, image=photo_image)
+#                 canvas.grid()
+#
+#                 canvas.bind("<Motion>", show_magnifier)
+#                 canvas.bind("<Leave>", hide_magnifier)
+#
+#                 #print("Image should be displayed now.")  # Debugging
+#
+#     except UnidentifiedImageError:
+#         print("Invalid image format.")  # Debugging
+#     except Exception as e:
+#         print(f"Error in show_image_preview: {e}")  # Debugging
+
+# Assume image_label and hide_magnifier are defined elsewhere in the code
+
 def show_image_preview(root, tree, listbox):
     try:
-        global original_image  # ora è una variabile globale
+        global original_image, canvas  # Now a global variable
         selected_items = tree.selection()
-        #print(f"Selected items: {selected_items}")  # Debugging
         if selected_items:
             selected_item_id = selected_items[0]
             file_path = tree.set(selected_item_id, "fullpath")
-            #print(f"File path: {file_path}")  # Debugging
             _, ext = os.path.splitext(file_path)
 
-            if ext.lower() in [
-                ".jpeg",
-                ".jpg",
-                ".png",
-            ]:  # Aggiunto ".png" come formato accettabile
-                original_image = Image.open(file_path)  # Qui impostiamo original_image
-                original_image = original_image.resize((200, 200), Image.LANCZOS)
-                photo_image = ImageTk.PhotoImage(original_image)
+            if ext.lower() in [".jpeg", ".jpg", ".png"]:  # Added ".png" as an acceptable format
+                original_image = Image.open(file_path)  # Here we set original_image
+                # Create a thumbnail or a separate smaller image for the GUI display
+                display_image = original_image.copy()
+                display_image.thumbnail((200, 200), Image.LANCZOS)
+                photo_image = ImageTk.PhotoImage(display_image)
                 image_label.config(image=photo_image)
                 image_label.photo_image = photo_image
-                # Creazione del canvas
+                # Creation of the canvas
                 canvas = tk.Canvas(root, width=200, height=200)
-                canvas.grid(row=1, column=1)  # posiziona il canvas dove preferisci
+                canvas.grid(row=1, column=1)  # Position the canvas where you prefer
                 canvas.create_image(0, 0, anchor=tk.NW, image=photo_image)
-                canvas.grid()
-
                 canvas.bind("<Motion>", show_magnifier)
                 canvas.bind("<Leave>", hide_magnifier)
-
-                #print("Image should be displayed now.")  # Debugging
 
     except UnidentifiedImageError:
         print("Invalid image format.")  # Debugging
     except Exception as e:
         print(f"Error in show_image_preview: {e}")  # Debugging
-
 
 def populate_tree(tree, node):
     try:

@@ -239,46 +239,6 @@ def hide_magnifier(event):
         magnifier_window.destroy()
         magnifier_window = None
 
-
-# def show_image_preview(root, tree, listbox):
-#     try:
-#         global original_image  # ora è una variabile globale
-#         selected_items = tree.selection()
-#         #print(f"Selected items: {selected_items}")  # Debugging
-#         if selected_items:
-#             selected_item_id = selected_items[0]
-#             file_path = tree.set(selected_item_id, "fullpath")
-#             #print(f"File path: {file_path}")  # Debugging
-#             _, ext = os.path.splitext(file_path)
-#
-#             if ext.lower() in [
-#                 ".jpeg",
-#                 ".jpg",
-#                 ".png",
-#             ]:  # Aggiunto ".png" come formato accettabile
-#                 original_image = Image.open(file_path)  # Qui impostiamo original_image
-#                 original_image = original_image.resize((200, 200), Image.LANCZOS)
-#                 photo_image = ImageTk.PhotoImage(original_image)
-#                 image_label.config(image=photo_image)
-#                 image_label.photo_image = photo_image
-#                 # Creazione del canvas
-#                 canvas = tk.Canvas(root, width=200, height=200)
-#                 canvas.grid(row=1, column=1)  # posiziona il canvas dove preferisci
-#                 canvas.create_image(0, 0, anchor=tk.NW, image=photo_image)
-#                 canvas.grid()
-#
-#                 canvas.bind("<Motion>", show_magnifier)
-#                 canvas.bind("<Leave>", hide_magnifier)
-#
-#                 #print("Image should be displayed now.")  # Debugging
-#
-#     except UnidentifiedImageError:
-#         print("Invalid image format.")  # Debugging
-#     except Exception as e:
-#         print(f"Error in show_image_preview: {e}")  # Debugging
-
-# Assume image_label and hide_magnifier are defined elsewhere in the code
-
 def show_image_preview(root, tree, listbox):
     try:
         global original_image, canvas  # Now a global variable
@@ -1040,36 +1000,6 @@ def update_tree(tree, parent_item):
     # Riespande i nodi
     expand_nodes(tree, parent_item, expanded_nodes)
 
-
-# def go_up(tree, levels=1):
-#     cur_item = tree.focus()
-#
-#     # Verifica se un elemento è selezionato
-#     if not cur_item:
-#         print("Nessun elemento selezionato.")
-#         return  # Early exit se non c'è una selezione
-#     else:
-#         print(cur_item)
-#     # Prende il percorso corrente e verifica se è valido
-#     cur_path = Path(tree.item(cur_item)['values'][0])
-#     if not cur_path.exists() or not cur_path.is_dir():
-#         print("Il percorso selezionato non è valido o non è una directory.")
-#         return  # Early exit se il percorso non è valido o non è una directory
-#
-#     # Salire di 'levels' nella gerarchia delle cartelle
-#     for _ in range(levels):
-#         # Se il percorso è già la radice, non salire oltre
-#         if cur_path.parent == cur_path:
-#             print("Raggiunta la radice del file system, non è possibile salire ulteriormente.")
-#             break
-#         cur_path = cur_path.parent
-#         print(cur_path)
-#
-#     # Cancella l'albero e popola con il nuovo percorso
-#     tree.delete(*tree.get_children())
-#     populate_tree(tree, cur_path.parent)  # Usare "" per l'elemento radice se appropriato
-#     update_tree(tree, cur_path.parent)  # Usare "" per l'elemento radice se appropriato
-
 def go_up(tree, levels=1):
     cur_item = tree.focus()
     if cur_item:
@@ -1091,7 +1021,98 @@ def go_up(tree, levels=1):
         else:
             print("Already at the root of the file system.")
 
+# Assume 'history' is a global list that keeps track of visited directories
+history = []
 
+def update_tree_prev(tree, new_path):
+    # Clear the tree view
+    for item in tree.get_children():
+        tree.delete(item)
+
+    # Populate the tree view with the new directory contents
+    try:
+        for child in new_path.iterdir():
+            if child.is_dir():
+                # Insert a new node for the directory
+                node = tree.insert('', 'end', text=child.name, open=False)
+                # Set the fullpath of the node
+                tree.set(node, "fullpath", str(child))
+                # Optionally, add dummy children to make the node expandable
+                tree.insert(node, 'end')
+            elif child.is_file():
+                # Insert a new node for the file
+                node = tree.insert('', 'end', text=child.name)
+                # Set the fullpath of the node
+                tree.set(node, "fullpath", str(child))
+    except:
+        pass
+    # Optionally, update the 'fullpath' of the root node to the new path
+    # This depends on your specific use case and tree structure
+
+def go_back(tree):
+    global history
+    if history:
+        # Pop the last visited directory from the history stack
+        prev_path = history.pop()
+        # Reinitialize the tree with the new path
+        update_tree_prev(tree, prev_path)
+        # Optionally, update the focus to the root of the tree
+        # tree.focus(tree.get_children()[0])
+        print(prev_path)  # Print the new path for debugging
+    else:
+        print("No previous directory in history.")
+
+def change_directory(tree, new_path):
+    global history
+    cur_item = tree.focus()
+    if cur_item:
+        cur_path = Path(tree.set(cur_item, "fullpath"))
+        # Add the current directory to the history before changing
+        if cur_path != new_path:  # Avoid adding the same path to history
+            history.append(cur_path)
+        # Change directory to new_path
+        update_tree_prev(tree, new_path)
+
+def navigate_to_path(tree, path_entry):
+    input_path = path_entry.get().strip()  # Strip leading/trailing whitespace
+    # Resolve the input path against the base directory
+    cur_item = tree.focus()
+    if cur_item:
+        # Ottenere il percorso completo dell'elemento corrente
+        base_dir_ = Path(tree.set(cur_item, "fullpath"))
+        for root, dirs, files in os.walk(base_dir_):
+
+            if input_path in root:
+
+
+                #new_path = base_dir_ / input_path
+                new_path=root
+
+                # Debugging: Print the input and resolved paths
+                print(f"Input path: {input_path}")
+                print(f"Resolved new path: {new_path}")
+
+                # Check if the path exists in the tree structure
+                node_exists = False
+                for item in tree.get_children():
+                    item_path = Path(tree.set(item, "fullpath")).resolve()
+                    # Debugging: Print the current item path
+                    print(f"Checking against tree item path: {item_path}")
+                    if new_path == item_path or str(new_path).startswith(str(item_path) + os.sep):
+                        node_exists = True
+                        break
+
+                if node_exists:
+                    # If the path exists in the tree, navigate to it
+                    messagebox.showinfo("OK", f"The directory {new_path} exist in the loaded structure.")
+                    # Aggiornare il nome visualizzato con il nuovo nome della directory
+                    tree.set(cur_item, "fullpath", str(new_path))
+                    tree.item(cur_item, text=new_path)
+                    update_tree(tree, cur_item)
+
+                else:
+                    messagebox.showerror("Error", f"The directory {new_path} does not exist in the loaded structure.")
+                    print(f"The directory {new_path} does not exist in the loaded structure.")
 
 def main():
     global input_dir, output_file, start_button, listbox  # Declare input_dir, output_file, and start_button as global variables
@@ -1115,7 +1136,13 @@ def main():
     # Bind the function to a button
     up_button = tk.Button(tree_frame, text="Up", command=lambda: go_up(tree))
     up_button.grid(row=2, column=0, sticky="ew")
+    # Create a search bar (Entry widget) for path input
+    path_entry = tk.Entry(tree_frame)
+    path_entry.grid(row=0, column=0, sticky="ew")
 
+    # Create a 'Go' button to navigate to the entered path
+    go_button = tk.Button(tree_frame, text="Go", command=lambda: navigate_to_path(tree, path_entry))
+    go_button.grid(row=0, column=1, sticky="ew")
     # Or bind the function to a key event
     root.bind('<BackSpace>', lambda event: go_up(tree))
     # tree = ttk.Treeview(columns=("fullpath", "type"), displaycolumns="")
@@ -1125,13 +1152,23 @@ def main():
     tree.bind(
         "<<TreeviewSelect>>", lambda event: show_image_preview(root, tree, listbox)
     )
-    tree.bind("<ButtonRelease-1>", lambda event, widget=None: on_item_drop(event))
-    tree.bind(
-        "<Button-1>", on_item_select
-    )  # Aggiungi questo bind per gestire la pressione del pulsante del mouse
+    #tree.bind("<ButtonRelease-1>", lambda event, widget=None: on_item_drop(event))
+    #tree.bind(
+        #"<Button-1>", on_item_select
+    #)  # Aggiungi questo bind per gestire la pressione del pulsante del mouse
+
+
     tree.bind("<Double-1>", lambda event: on_item_double_click(tree, event))
     hsb["command"] = tree.xview
+    # Bind the double-click event to the callback
 
+    # def on_directory_selected(event):
+    #     item = tree.selection()[0]  # Get the selected item
+    #     new_path = Path(tree.set(item, "fullpath"))
+    #     if new_path.is_dir():
+    #         change_directory(tree, new_path)
+    #
+    # tree.bind("<Double-2>", on_directory_selected)
     tree.heading("#0", text="Directory Structure", anchor="w")
     # Configurazione della Treeview per utilizzare la scrollbar
 

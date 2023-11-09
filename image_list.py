@@ -1,6 +1,5 @@
 import os
 
-import openpyxl
 from openpyxl.styles import Font
 from openpyxl import Workbook, load_workbook
 import tkinter as tk
@@ -17,10 +16,6 @@ import tempfile
 from geopandas import GeoDataFrame
 from shapely.geometry import Point
 import folium
-from folium.plugins import AntPath
-import math
-import pandas as pd
-import webbrowser
 import imgkit
 from openpyxl.drawing.image import Image as XLImage
 import json

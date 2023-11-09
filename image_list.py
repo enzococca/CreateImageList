@@ -521,13 +521,13 @@ def process_images(
                                     ]
                                 )
                                 # # Verifica che data_to_append non sia una tupla singola
-                                if (
-                                    isinstance(ws, tuple)
-                                    and len(ws) == 1
-                                ):
-                                    data_to_append = list(ws[0])
-                                #
-                                ws.append(data_to_append)
+                                # if (
+                                #     isinstance(ws, tuple)
+                                #     and len(ws) == 1
+                                # ):
+                                #     data_to_append = list(ws[0])
+                                # #
+                                # ws.append(data_to_append)
                                 # Debugging: Verify that the file exists and is accessible
                                 if not os.path.exists(thumbnail_path):
                                     print(f"File does not exist: {thumbnail_path}")

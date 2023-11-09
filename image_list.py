@@ -1,5 +1,4 @@
 import os
-
 from openpyxl.styles import Font
 from openpyxl import Workbook, load_workbook
 import tkinter as tk
@@ -14,7 +13,10 @@ import shutil
 from tkinterdnd2 import DND_FILES, TkinterDnD
 import tempfile
 from geopandas import GeoDataFrame
-from shapely.geometry import Point
+try:
+    from shapely.geometry import Point
+except:
+    pass
 import folium
 import imgkit
 from openpyxl.drawing.image import Image as XLImage
